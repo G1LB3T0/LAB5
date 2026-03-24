@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 05 · Algoritmos de Búsqueda | IA 2026</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d1117; --surface: #161b22; --surface2: #21262d;
+  --border: #30363d; --text: #c9d1d9; --heading: #f0f6fc;
+  --muted: #8b949e; --primary: #58a6ff; --green: #3fb950;
+  --yellow: #d29922; --red: #f85149; --purple: #bc8cff;
+  --orange: #ffa657;
+  --bfs-c: #38bdf8; --dfs-c: #f87171; --greedy-c: #fbbf24;
+  --astar-c: #4ade80; --dijk-c: #c084fc; --path-c: #fb923c;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 15px; line-height: 1.65; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── Navbar ── */
+.navbar { background: rgba(13,17,23,.9) !important; backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border); padding: 12px 0; position: sticky; top: 0; z-index: 999; }
+.navbar-brand { font-weight: 700; font-size: 1rem; color: var(--heading) !important; letter-spacing: -.3px; }
+.navbar-brand span { color: var(--primary); }
+.nav-link { color: var(--muted) !important; font-size: .85rem; padding: 4px 10px !important; border-radius: 6px; transition: all .2s; }
+.nav-link:hover { color: var(--heading) !important; background: var(--surface2); }
+
+/* ── Hero ── */
+.hero { padding: 80px 0 60px; text-align: center; position: relative; overflow: hidden; }
+.hero::before { content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(88,166,255,.08), transparent 70%); pointer-events: none; }
+.hero-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(88,166,255,.1);
+  border: 1px solid rgba(88,166,255,.25); color: var(--primary); font-size: .78rem;
+  font-weight: 600; padding: 5px 14px; border-radius: 99px; margin-bottom: 24px; letter-spacing: .4px; }
+.hero h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; color: var(--heading);
+  letter-spacing: -1px; line-height: 1.15; margin-bottom: 16px; }
+.hero h1 span { background: linear-gradient(135deg, #58a6ff, #bc8cff); -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent; background-clip: text; }
+.hero p { color: var(--muted); font-size: 1.05rem; max-width: 580px; margin: 0 auto 32px; }
+.algo-pills { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 40px; }
+.algo-pill { padding: 5px 14px; border-radius: 99px; font-size: .78rem; font-weight: 600; border: 1px solid; }
+
+/* ── Section ── */
+.ex-section { padding: 64px 0; border-top: 1px solid var(--border); }
+.ex-label { display: inline-flex; align-items: center; gap: 8px; font-size: .75rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); margin-bottom: 8px; }
+.ex-num { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; font-size: .75rem; font-weight: 700; }
+.ex-section h2 { font-size: 1.6rem; font-weight: 700; color: var(--heading); letter-spacing: -.4px; margin-bottom: 8px; }
+.ex-section .lead { color: var(--muted); font-size: .92rem; max-width: 700px; }
+
+/* ── Card ── */
+.card-dark { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.card-dark .card-header { background: var(--surface2); border-bottom: 1px solid var(--border);
+  padding: 14px 20px; font-weight: 600; font-size: .88rem; color: var(--heading);
+  display: flex; align-items: center; gap: 8px; }
+.card-dark .card-body { padding: 20px; }
+
+/* ── Canvas Grid ── */
+canvas { display: block; border-radius: 8px; image-rendering: pixelated; width: 100%; max-width: 460px; }
+.canvas-wrap { display: flex; justify-content: center; padding: 16px; background: var(--bg); border-radius: 8px; }
+
+/* ── Stats row ── */
+.stat-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.stat-box { flex: 1; min-width: 90px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 12px; text-align: center; }
+.stat-box .val { font-family: 'JetBrains Mono', monospace; font-size: 1.25rem; font-weight: 600;
+  color: var(--heading); line-height: 1; }
+.stat-box .lbl { font-size: .7rem; color: var(--muted); margin-top: 3px; text-transform: uppercase;
+  letter-spacing: .5px; }
+
+/* ── Buttons ── */
+.btn-run { font-size: .82rem; font-weight: 600; padding: 7px 18px; border-radius: 8px;
+  border: none; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 6px; }
+.btn-run:disabled { opacity: .45; cursor: not-allowed; }
+.btn-reset { font-size: .82rem; font-weight: 500; padding: 7px 14px; border-radius: 8px;
+  border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer;
+  transition: all .2s; }
+.btn-reset:hover { border-color: var(--text); color: var(--text); }
+
+/* ── Legend ── */
+.legend { display: flex; flex-wrap: wrap; gap: 10px; padding: 12px 16px;
+  background: var(--bg); border-radius: 8px; margin-top: 10px; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: .75rem; color: var(--muted); }
+.legend-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+
+/* ── Discussion ── */
+.discussion { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.discussion .disc-header { padding: 16px 20px; border-bottom: 1px solid var(--border);
+  font-weight: 600; font-size: .95rem; color: var(--heading); display: flex; align-items: center; gap: 8px; }
+.disc-q { padding: 18px 20px; border-bottom: 1px solid var(--border); }
+.disc-q:last-child { border-bottom: none; }
+.disc-q .question { font-weight: 600; color: var(--heading); margin-bottom: 8px; font-size: .9rem; }
+.disc-q .answer { color: var(--muted); font-size: .875rem; line-height: 1.7; }
+.disc-q .answer strong { color: var(--text); }
+.highlight { background: rgba(88,166,255,.1); border-left: 3px solid var(--primary);
+  padding: 10px 14px; border-radius: 0 6px 6px 0; margin-top: 8px; font-size: .85rem; color: var(--text); }
+
+/* ── Table ── */
+.table-dark-custom { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.table-dark-custom th { background: var(--surface2); color: var(--heading); font-weight: 600;
+  padding: 10px 14px; text-align: center; border: 1px solid var(--border); font-size: .78rem;
+  text-transform: uppercase; letter-spacing: .5px; }
+.table-dark-custom td { padding: 10px 14px; text-align: center; border: 1px solid var(--border);
+  color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: .82rem; }
+.table-dark-custom tr:nth-child(even) td { background: rgba(255,255,255,.02); }
+.table-dark-custom tr:hover td { background: rgba(88,166,255,.05); }
+.algo-name { font-family: 'Inter', sans-serif !important; font-weight: 600; font-size: .82rem !important; }
+
+/* ── Comparison layout ── */
+.compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 768px) { .compare-grid { grid-template-columns: 1fr; } }
+
+/* ── Footer ── */
+footer { background: var(--surface); border-top: 1px solid var(--border); padding: 40px 0; margin-top: 40px; }
+footer p { color: var(--muted); font-size: .82rem; }
+
+/* ── Maze color indicator dots ── */
+.algo-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+
+/* ── Info box ── */
+.info-box { background: rgba(88,166,255,.06); border: 1px solid rgba(88,166,255,.2);
+  border-radius: 8px; padding: 14px 16px; font-size: .85rem; color: var(--text); margin-bottom: 16px; }
+.info-box i { color: var(--primary); margin-right: 6px; }
+
+/* ── Speed control ── */
+.speed-wrap { display: flex; align-items: center; gap: 8px; font-size: .78rem; color: var(--muted); }
+.speed-wrap input[type=range] { accent-color: var(--primary); width: 80px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ NAVBAR ═══════════════════ -->
+<nav class="navbar navbar-expand-lg">
+  <div class="container">
+    <a class="navbar-brand" href="#"><i class="fa-solid fa-diagram-project me-2" style="color:var(--primary)"></i>IA 2026 · <span>Lab 05</span></a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <i class="fa-solid fa-bars" style="color:var(--muted)"></i>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto gap-1">
+        <li class="nav-item"><a class="nav-link" href="#ex1">BFS / DFS</a></li>
+        <li class="nav-item"><a class="nav-link" href="#ex2">Trampa Greedy</a></li>
+        <li class="nav-item"><a class="nav-link" href="#ex3">A* vs Dijkstra</a></li>
+        <li class="nav-item"><a class="nav-link" href="#ex4">Métricas</a></li>
+        <li class="nav-item"><a class="nav-link" href="#ex5">Stress-Test</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════ HERO ═══════════════════ -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-badge"><i class="fa-solid fa-calendar-days"></i> 18 de marzo, 2026</div>
+    <h1>Algoritmos de<br><span>Búsqueda en Grafos</span></h1>
+    <p>Simulación y comparación visual de BFS, DFS, UCS, Greedy Search y A* en entornos de grid interactivos.</p>
+    <div class="algo-pills">
+      <span class="algo-pill" style="color:var(--bfs-c);border-color:rgba(56,189,248,.3);background:rgba(56,189,248,.08)">BFS</span>
+      <span class="algo-pill" style="color:var(--dfs-c);border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.08)">DFS</span>
+      <span class="algo-pill" style="color:var(--dijk-c);border-color:rgba(192,132,252,.3);background:rgba(192,132,252,.08)">UCS / Dijkstra</span>
+      <span class="algo-pill" style="color:var(--greedy-c);border-color:rgba(251,191,36,.3);background:rgba(251,191,36,.08)">Greedy</span>
+      <span class="algo-pill" style="color:var(--astar-c);border-color:rgba(74,222,128,.3);background:rgba(74,222,128,.08)">A*</span>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════
+     EJERCICIO 1 — BFS vs DFS
+════════════════════════════════════════════════════ -->
+<section class="ex-section" id="ex1">
+  <div class="container">
+    <div class="ex-label">
+      <span class="ex-num" style="background:rgba(56,189,248,.15);color:var(--bfs-c)">1</span>
+      Ejercicio
+    </div>
+    <h2>El Laberinto de BFS y DFS</h2>
+    <p class="lead mb-4">Laberinto generado con "Simple Random Maze". Comparación de la frontera de expansión y la optimalidad de la solución encontrada por cada algoritmo.</p>
+
+    <div class="info-box">
+      <i class="fa-solid fa-circle-info"></i>
+      Presiona <strong>Generar Laberinto</strong> para crear un nuevo laberinto aleatorio. Luego ejecuta cada algoritmo para ver cómo exploran el espacio y qué camino encuentran.
+    </div>
+
+    <div class="mb-3 d-flex flex-wrap gap-2 align-items-center">
+      <button class="btn-run" style="background:var(--surface2);color:var(--heading)" onclick="generateMaze1()">
+        <i class="fa-solid fa-shuffle"></i> Generar Laberinto
+      </button>
+      <button id="btn1-bfs" class="btn-run" style="background:rgba(56,189,248,.15);color:var(--bfs-c)" onclick="runEx1('bfs')">
+        <i class="fa-solid fa-play"></i> Ejecutar BFS
+      </button>
+      <button id="btn1-dfs" class="btn-run" style="background:rgba(248,113,113,.15);color:var(--dfs-c)" onclick="runEx1('dfs')">
+        <i class="fa-solid fa-play"></i> Ejecutar DFS
+      </button>
+      <div class="speed-wrap ms-auto">
+        <i class="fa-solid fa-gauge-simple"></i>
+        <span>Velocidad:</span>
+        <input type="range" id="speed1" min="1" max="10" value="5">
+      </div>
+    </div>
+
+    <div class="compare-grid">
+      <!-- BFS panel -->
+      <div class="card-dark">
+        <div class="card-header">
+          <span class="algo-dot" style="background:var(--bfs-c)"></span>
+          BFS — Breadth-First Search
+        </div>
+        <div class="card-body">
+          <div class="canvas-wrap"><canvas id="c1-bfs" width="420" height="285"></canvas></div>
+          <div class="stat-row" id="stats1-bfs">
+            <div class="stat-box"><div class="val" id="s1b-nodes">—</div><div class="lbl">Nodos visit.</div></div>
+            <div class="stat-box"><div class="val" id="s1b-path">—</div><div class="lbl">Long. camino</div></div>
+            <div class="stat-box"><div class="val" id="s1b-front">—</div><div class="lbl">Frontera final</div></div>
+          </div>
+        </div>
+      </div>
+      <!-- DFS panel -->
+      <div class="card-dark">
+        <div class="card-header">
+          <span class="algo-dot" style="background:var(--dfs-c)"></span>
+          DFS — Depth-First Search
+        </div>
+        <div class="card-body">
+          <div class="canvas-wrap"><canvas id="c1-dfs" width="420" height="285"></canvas></div>
+          <div class="stat-row" id="stats1-dfs">
+            <div class="stat-box"><div class="val" id="s1d-nodes">—</div><div class="lbl">Nodos visit.</div></div>
+            <div class="stat-box"><div class="val" id="s1d-path">—</div><div class="lbl">Long. camino</div></div>
+            <div class="stat-box"><div class="val" id="s1d-front">—</div><div class="lbl">Frontera final</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend mt-3">
+      <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>Inicio</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div>Fin</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#374151"></div>Pared</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(56,189,248,.5)"></div>Visitado BFS</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(248,113,113,.5)"></div>Visitado DFS</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#fb923c"></div>Camino</div>
+    </div>
+
+    <!-- Preguntas -->
+    <div class="discussion mt-4">
+      <div class="disc-header"><i class="fa-solid fa-comments" style="color:var(--primary)"></i> Preguntas de Discusión</div>
+
+      <div class="disc-q">
+        <div class="question">¿Por qué BFS garantiza el camino más corto en este grid y DFS no?</div>
+        <div class="answer">
+          BFS expande los nodos en <strong>orden de profundidad creciente</strong>: primero todos los vecinos a distancia 1, luego a distancia 2, etc. Esto garantiza que el primer camino encontrado al nodo destino sea el de menor número de pasos (aristas), ya que ningún camino más corto puede existir sin haber sido explorado primero.
+          <br><br>
+          DFS, en cambio, sigue una rama tan profundo como sea posible antes de retroceder. El camino que encuentra depende del <strong>orden de exploración</strong> y puede ser arbitrariamente largo: podría recorrer casi todo el laberinto antes de encontrar el destino, obteniendo un camino subóptimo.
+          <div class="highlight"><i class="fa-solid fa-lightbulb me-1" style="color:var(--yellow)"></i>
+            En un grid no ponderado, BFS es equivalente a UCS (Uniform Cost Search): el costo de cada arista es 1, por lo que el primer nodo alcanzado tiene garantizado el menor costo acumulado.
+          </div>
+        </div>
+      </div>
+
+      <div class="disc-q">
+        <div class="question">Mencione una desventaja crítica de memoria para BFS y una de optimalidad para DFS.</div>
+        <div class="answer">
+          <strong>BFS – desventaja de memoria:</strong> BFS almacena en la cola <em>todos</em> los nodos de la frontera activa simultáneamente. En el peor caso (grafo sin obstáculos), la frontera crece exponencialmente con la profundidad: O(b<sup>d</sup>) donde b es el factor de ramificación y d la profundidad. En un grid grande esto puede consumir gigabytes de RAM antes de encontrar la solución.
+          <br><br>
+          <strong>DFS – desventaja de optimalidad:</strong> DFS no garantiza encontrar el camino más corto. En un laberinto puede encontrar un camino de longitud 500 cuando existe uno de longitud 10. Además, en grafos con ciclos sin control de nodos visitados, puede caer en bucles infinitos. Tampoco es completo en grafos infinitos.
+        </div>
+      </div>
+
+      <div class="disc-q">
+        <div class="question">¿Cuál es la diferencia visual en la "frontera" de expansión de ambos?</div>
+        <div class="answer">
+          <strong>BFS:</strong> La frontera tiene forma de <em>anillo concéntrico</em> que se expande uniformemente desde el inicio hacia todos los lados simultáneamente. Visualmente parece una "ola" o "inundación" que crece de manera circular/diamante alrededor del punto de partida. Todos los nodos a distancia k son visitados antes de cualquier nodo a distancia k+1.
+          <br><br>
+          <strong>DFS:</strong> La frontera es un <em>camino delgado y sinuoso</em> que se adentra profundamente en una dirección, luego retrocede y toma otra rama. Visualmente parece "tendriles" o "tentáculos" que exploran en profundidad. La mancha de nodos visitados es asimétrica e irregular.
+        </div>
+      </div>
+
+      <div class="disc-q">
+        <div class="question">¿Qué ocurre si analizamos BFS y DFS en un laberinto generado por "Recursive Division"?</div>
+        <div class="answer">
+          El laberinto de Recursive Division genera divisiones recursivas del espacio con pasillos únicos (árbol de expansión), por lo que existe <strong>exactamente un camino</strong> entre cualquier par de nodos.
+          <br><br>
+          En este caso: <strong>BFS y DFS encuentran el mismo camino único</strong>, pero BFS lo descubre explorando una frontera uniforme mientras que DFS puede tomar una ruta de exploración completamente diferente. La longitud del camino es idéntica para ambos (ya que es único), pero DFS puede visitar muchos más nodos antes de encontrarlo si la estructura recursiva favorece ramas equivocadas. BFS seguirá siendo más eficiente en número de nodos explorados para destinos cercanos.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════
+     EJERCICIO 2 — La Trampa de la Distancia
+════════════════════════════════════════════════════ -->
+<section class="ex-section" id="ex2">
+  <div class="container">
+    <div class="ex-label">
+      <span class="ex-num" style="background:rgba(251,191,36,.15);color:var(--greedy-c)">2</span>
+      Ejercicio
+    </div>
+    <h2>La Trampa de la Distancia</h2>
+    <p class="lead mb-4">Escenario diseñado para exponer la debilidad del Greedy Search: paredes que lo obligan a tomar un camino mucho más largo que BFS al seguir ciegamente la heurística de distancia.</p>
+
+    <div class="info-box" style="background:rgba(251,191,36,.06);border-color:rgba(251,191,36,.2)">
+      <i class="fa-solid fa-triangle-exclamation" style="color:var(--yellow)"></i>
+      <strong>Escenario Trampa:</strong> El destino está a la derecha. Greedy va directo hacia él pero una pared en forma de "C invertida" lo atrapa. BFS explora sistemáticamente y encuentra el camino óptimo rodeando por abajo.
+    </div>
+
+    <div class="mb-3 d-flex flex-wrap gap-2 align-items-center">
+      <button id="btn2-greedy" class="btn-run" style="background:rgba(251,191,36,.15);color:var(--greedy-c)" onclick="runEx2('greedy')">
+        <i class="fa-solid fa-play"></i> Ejecutar Greedy
+      </button>
+      <button id="btn2-bfs" class="btn-run" style="background:rgba(56,189,248,.15);color:var(--bfs-c)" onclick="runEx2('bfs')">
+        <i class="fa-solid fa-play"></i> Ejecutar BFS
+      </button>
+      <button class="btn-reset" onclick="resetEx2()"><i class="fa-solid fa-rotate-left me-1"></i>Reset</button>
+      <div class="speed-wrap ms-auto">
+        <i class="fa-solid fa-gauge-simple"></i><span>Velocidad:</span>
+        <input type="range" id="speed2" min="1" max="10" value="5">
+      </div>
+    </div>
+
+    <div class="compare-grid">
+      <div class="card-dark">
+        <div class="card-header">
+          <span class="algo-dot" style="background:var(--greedy-c)"></span>
+          Greedy Best-First Search
+          <span class="ms-auto badge" style="background:rgba(248,113,113,.15);color:var(--red);font-size:.7rem">Subóptimo</span>
+        </div>
+        <div class="card-body">
+          <div class="canvas-wrap"><canvas id="c2-greedy" width="420" height="285"></canvas></div>
+          <div class="stat-row">
+            <div class="stat-box"><div class="val" id="s2g-nodes">—</div><div class="lbl">Nodos visit.</div></div>
+            <div class="stat-box"><div class="val" id="s2g-path">—</div><div class="lbl">Long. camino</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-dark">
+        <div class="card-header">
+          <span class="algo-dot" style="background:var(--bfs-c)"></span>
+          BFS — Camino Óptimo
+          <span class="ms-auto badge" style="background:rgba(74,222,128,.15);color:var(--astar-c);font-size:.7rem">Óptimo</span>
+        </div>
+        <div class="card-body">
+          <div class="canvas-wrap"><canvas id="c2-bfs" width="420" height="285"></canvas></div>
+          <div class="stat-row">
+            <div class="stat-box"><div class="val" id="s2b-nodes">—</div><div class="lbl">Nodos visit.</div></div>
+            <div class="stat-box"><div class="val" id="s2b-path">—</div><div class="lbl">Long. camino</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="discussion mt-4">
+      <div class="disc-header"><i class="fa-solid fa-comments" style="color:var(--primary)"></i> Preguntas de Discusión</div>
+
+      <div class="disc-q">
+        <div class="question">¿Es el algoritmo Greedy óptimo? ¿Por qué?</div>
+        <div class="answer">
+          <strong>No, Greedy Search no es óptimo.</strong> Sólo considera la heurística h(n) (distancia estimada al destino) e ignora completamente el costo acumulado g(n) para llegar a n. Esto lo lleva a tomar "atajos aparentes" que en realidad son callejones sin salida o rutas largas.
+          <br><br>
+          En el escenario trampa: Greedy ve que el destino está a la derecha y sigue avanzando en esa dirección hasta chocar con la pared. Entonces tiene que rodear, acumulando muchos pasos innecesarios. BFS no se deja "engañar" porque expande por capas y descubre el camino corto por debajo de la trampa.
+          <div class="highlight">
+            <strong>Fórmula Greedy:</strong> f(n) = h(n) &nbsp;|&nbsp; <strong>Fórmula A*:</strong> f(n) = g(n) + h(n)<br>
+            Greedy sacrifica optimalidad por velocidad; A* sacrifica velocidad por optimalidad garantizada (con heurística admisible).
+          </div>
+        </div>
+      </div>
+
+      <div class="disc-q">
+        <div class="question">¿Cuál algoritmo es generalmente más rápido en ejecución y cuál explora mayor área?</div>
+        <div class="answer">
+          <strong>Más rápido:</strong> Greedy suele encontrar una solución (no necesariamente óptima) más rápido porque su heurística lo guía directamente al destino sin explorar nodos "lejanos". En mapas sin trampas, puede visitar muy pocos nodos.
+          <br><br>
+          <strong>Mayor área explorada:</strong> BFS siempre explora en todas las direcciones de manera uniforme. En laberintos complejos, puede visitar muchos más nodos que Greedy antes de encontrar la solución. Sin embargo, en el <em>escenario trampa</em> se invierte: Greedy explora el callejón sin salida extensivamente mientras BFS encuentra el camino corto rápidamente.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════
+     EJERCICIO 3 — Heurísticas y Pesos
+════════════════════════════════════════════════════ -->
+<section class="ex-section" id="ex3">
+  <div class="container">
+    <div class="ex-label">
+      <span class="ex-num" style="background:rgba(74,222,128,.15);color:var(--astar-c)">3</span>
+      Ejercicio
+    </div>
+    <h2>Heurísticas y Pesos: A* vs Dijkstra</h2>
+    <p class="lead mb-4">Escenario con obstáculos dispersos. Se compara la eficiencia de A* (guiado por heurística) contra Dijkstra/UCS (expansión uniforme por costo).</p>
+
+    <div class="mb-3 d-flex flex-wrap gap-2 align-items-center">
+      <button class="btn-run" style="background:var(--surface2);color:var(--heading)" onclick="generateMaze3()">
+        <i class="fa-solid fa-shuffle"></i> Nuevo Escenario
+      </button>
+      <button id="btn3-astar" class="btn-run" style="background:rgba(74,222,128,.15);color:var(--astar-c)" onclick="runEx3('astar')">
+        <i class="fa-solid fa-play"></i> Ejecutar A*
+      </button>
+      <button id="btn3-dijk" class="btn-run" style="background:rgba(192,132,252,.15);color:var(--dijk-c)" onclick="runEx3('dijk')">
+        <i class="fa-solid fa-play"></i> Ejecutar Dijkstra
+      </button>
+      <div class="speed-wrap ms-auto">
+        <input type="range" id="speed3" min="1" max="10" value="6">
+      </div>
+    </div>
+
+    <div class="compare-grid">
+      <div class="card-dark">
+        <div class="card-header">
+          <span class="algo-dot" style="background:var(--astar-c)"></span>
+          A* (Manhattan)
+        </div>
+        <div class="card-body">
+          <div class="canvas-wrap"><canvas id="c3-astar" width="420" height="285"></canvas></div>
+          <div class="stat-row">
+            <div class="stat-box"><div class="val" id="s3a-nodes">—</div><div class="lbl">Visitados</div></div>
+            <div class="stat-box"><div class="val" id="s3a-path">—</div><div class="lbl">Camino</div></div>
+            <div class="stat-box"><div class="val" id="s3a-front">—</div><div class="lbl">Frontera</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-dark">
+        <div class="card-header">
+          <span class="algo-dot" style="background:var(--dijk-c)"></span>
+          Dijkstra / UCS
+        </div>
+        <div class="card-body">
+          <div class="canvas-wrap"><canvas id="c3-dijk" width="420" height="285"></canvas></div>
+          <div class="stat-row">
+            <div class="stat-box"><div class="val" id="s3d-nodes">—</div><div class="lbl">Visitados</div></div>
+            <div class="stat-box"><div class="val" id="s3d-path">—</div><div class="lbl">Camino</div></div>
+            <div class="stat-box"><div class="val" id="s3d-front">—</div><div class="lbl">Frontera</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla comparativa -->
+    <div class="card-dark mt-4">
+      <div class="card-header"><i class="fa-solid fa-table me-1"></i>Tabla Comparativa</div>
+      <div class="card-body" style="overflow-x:auto">
+        <table class="table-dark-custom" id="table3">
+          <thead>
+            <tr>
+              <th>Algoritmo</th>
+              <th>Nodos Explorados</th>
+              <th>Frontera Final</th>
+              <th>Pasos Camino</th>
+              <th>Costo Total</th>
+              <th>Complejidad Memoria</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="algo-name" style="color:var(--astar-c)">A* (Manhattan)</td>
+              <td id="t3a-nodes">—</td><td id="t3a-front">—</td>
+              <td id="t3a-steps">—</td><td id="t3a-cost">—</td>
+              <td>O(b<sup>d</sup>) open list</td>
+            </tr>
+            <tr>
+              <td class="algo-name" style="color:var(--dijk-c)">Dijkstra (UCS)</td>
+              <td id="t3d-nodes">—</td><td id="t3d-front">—</td>
+              <td id="t3d-steps">—</td><td id="t3d-cost">—</td>
+              <td>O(V + E log V)</td>
+            </tr>
+          </tbody>
+        </table>
+        <p style="font-size:.75rem;color:var(--muted);margin-top:10px"><em>* Ejecuta ambos algoritmos para ver los resultados reales de este escenario.</em></p>
+      </div>
+    </div>
+
+    <div class="discussion mt-4">
+      <div class="disc-header"><i class="fa-solid fa-comments" style="color:var(--primary)"></i> Preguntas de Discusión</div>
+
+      <div class="disc-q">
+        <div class="question">¿Se puede alterar el mapa para que A* termine significativamente más rápido que Dijkstra?</div>
+        <div class="answer">
+          <strong>Sí.</strong> Cuando el destino está lejos del inicio y hay pocos obstáculos en la dirección correcta, A* explora una fracción de los nodos que Dijkstra explora. La heurística admisible h(n) = Manhattan(n, E) enfoca la búsqueda hacia el destino, podando ramas que Dijkstra explora innecesariamente.
+          <br><br>
+          Para maximizar la ventaja de A*: colocar inicio y destino en esquinas opuestas del mapa con obstáculos dispersos (no bloqueantes de la ruta directa). En este caso, Dijkstra expande en todas las direcciones como "círculos concéntricos" mientras A* enfoca casi todos sus nodos en la dirección del destino.
+          <div class="highlight">
+            En el peor caso (heurística = 0, o mapa en cuña), A* degenera en Dijkstra. Con heurística perfecta h*(n), A* expande exactamente los nodos del camino óptimo y nada más.
+          </div>
+        </div>
+      </div>
+
+      <div class="disc-q">
+        <div class="question">¿Bajo qué condiciones Dijkstra y A* (o weighted A*) encuentran caminos distintos?</div>
+        <div class="answer">
+          <strong>Con heurística admisible:</strong> Dijkstra y A* siempre encuentran el mismo camino óptimo (pueden diferir en el orden de exploración, pero el resultado final es idéntico).
+          <br><br>
+          <strong>Caminos distintos ocurren con:</strong>
+          <ul style="margin-top:8px;padding-left:20px;color:var(--muted)">
+            <li><strong>Weighted A* (wA*):</strong> f(n) = g(n) + w·h(n) con w > 1. Sacrifica optimalidad por velocidad. El camino encontrado puede costar hasta w veces el óptimo.</li>
+            <li><strong>Heurística inadmisible:</strong> Si h(n) sobreestima el costo real, A* puede ignorar el camino óptimo.</li>
+            <li><strong>Celdas con peso (swamp):</strong> Con la misma heurística pero diferentes pesos de celdas, ambos encuentran el mismo camino mínimo-costo, que puede diferir del camino de menor número de pasos.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════
+     EJERCICIO 4 — El Impacto de la Métrica
+════════════════════════════════════════════════════ -->
+<section class="ex-section" id="ex4">
+  <div class="container">
+    <div class="ex-label">
+      <span class="ex-num" style="background:rgba(192,132,252,.15);color:var(--dijk-c)">4</span>
+      Ejercicio
+    </div>
+    <h2>El Impacto de la Métrica</h2>
+    <p class="lead mb-4">A* con distancia Manhattan vs. distancia Euclidiana. Mismo escenario, misma meta — diferente heurística, diferente comportamiento de exploración.</p>
+
+    <div class="mb-3 d-flex flex-wrap gap-2 align-items-center">
+      <button class="btn-run" style="background:var(--surface2);color:var(--heading)" onclick="generateMaze4()">
+        <i class="fa-solid fa-shuffle"></i> Nuevo Escenario
+      </button>
+      <button id="btn4-man" class="btn-run" style="background:rgba(74,222,128,.15);color:var(--astar-c)" onclick="runEx4('manhattan')">
+        <i class="fa-solid fa-play"></i> A* Manhattan
+      </button>
+      <button id="btn4-euc" class="btn-run" style="background:rgba(192,132,252,.15);color:var(--dijk-c)" onclick="runEx4('euclidean')">
+        <i class="fa-solid fa-play"></i> A* Euclideana
+      </button>
+      <div class="speed-wrap ms-auto">
+        <input type="range" id="speed4" min="1" max="10" value="6">
+      </div>
+    </div>
+
+    <div class="compare-grid">
+      <div class="card-dark">
+        <div class="card-header">
+          <span class="algo-dot" style="background:var(--astar-c)"></span>
+          A* — Distancia Manhattan
+          <code style="font-size:.7rem;color:var(--muted);margin-left:auto">|Δr| + |Δc|</code>
+        </div>
+        <div class="card-body">
+          <div class="canvas-wrap"><canvas id="c4-man" width="420" height="285"></canvas></div>
+          <div class="stat-row">
+            <div class="stat-box"><div class="val" id="s4m-nodes">—</div><div class="lbl">Visitados</div></div>
+            <div class="stat-box"><div class="val" id="s4m-path">—</div><div class="lbl">Camino</div></div>
+            <div class="stat-box"><div class="val" id="s4m-front">—</div><div class="lbl">Frontera</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-dark">
+        <div class="card-header">
+          <span class="algo-dot" style="background:var(--dijk-c)"></span>
+          A* — Distancia Euclideana
+          <code style="font-size:.7rem;color:var(--muted);margin-left:auto">√(Δr²+Δc²)</code>
+        </div>
+        <div class="card-body">
+          <div class="canvas-wrap"><canvas id="c4-euc" width="420" height="285"></canvas></div>
+          <div class="stat-row">
+            <div class="stat-box"><div class="val" id="s4e-nodes">—</div><div class="lbl">Visitados</div></div>
+            <div class="stat-box"><div class="val" id="s4e-path">—</div><div class="lbl">Camino</div></div>
+            <div class="stat-box"><div class="val" id="s4e-front">—</div><div class="lbl">Frontera</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-dark mt-4">
+      <div class="card-header"><i class="fa-solid fa-table me-1"></i>Tabla Comparativa — Métricas</div>
+      <div class="card-body" style="overflow-x:auto">
+        <table class="table-dark-custom">
+          <thead>
+            <tr>
+              <th>Métrica A*</th>
+              <th>Nodos Explorados</th>
+              <th>Frontera Final</th>
+              <th>Pasos Camino</th>
+              <th>Costo Total</th>
+              <th>Admisible en Grid 4-dir</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="algo-name" style="color:var(--astar-c)">Manhattan</td>
+              <td id="t4m-nodes">—</td><td id="t4m-front">—</td>
+              <td id="t4m-steps">—</td><td id="t4m-cost">—</td>
+              <td style="color:var(--green)">✓ Admisible</td>
+            </tr>
+            <tr>
+              <td class="algo-name" style="color:var(--dijk-c)">Euclideana</td>
+              <td id="t4e-nodes">—</td><td id="t4e-front">—</td>
+              <td id="t4e-steps">—</td><td id="t4e-cost">—</td>
+              <td style="color:var(--green)">✓ Admisible</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="discussion mt-4">
+      <div class="disc-header"><i class="fa-solid fa-comments" style="color:var(--primary)"></i> Preguntas de Discusión</div>
+
+      <div class="disc-q">
+        <div class="question">¿Cuál métrica produce los caminos más cortos, Manhattan o Euclideana?</div>
+        <div class="answer">
+          En un grid con movimiento en <strong>4 direcciones</strong> (arriba, abajo, izquierda, derecha), <strong>ambas métricas producen el mismo camino óptimo</strong> porque el costo real de cada movimiento es 1 y la distancia Manhattan es la heurística exacta para el movimiento en grilla.
+          <br><br>
+          La diferencia está en la <em>eficiencia de exploración</em>:
+          <ul style="margin-top:8px;padding-left:20px;color:var(--muted)">
+            <li><strong>Manhattan:</strong> Es la heurística más informada (mayor valor → más poda). Explora menos nodos en promedio en grids 4-direccionales porque coincide exactamente con el movimiento real. Es <em>consistente</em> (monotónica).</li>
+            <li><strong>Euclideana:</strong> Siempre ≤ Manhattan en grids 4-dir → heurística menos informada → explora más nodos. Sigue siendo admisible (nunca sobreestima), pero más conservadora.</li>
+          </ul>
+          <div class="highlight">
+            <strong>En grids 8-direccionales</strong> (con diagonales), la situación se invierte: la distancia Euclideana se vuelve la heurística más apropiada y Manhattan sobreestima (perdería admisibilidad).
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════
+     EJERCICIO 5 — Stress Test
+════════════════════════════════════════════════════ -->
+<section class="ex-section" id="ex5">
+  <div class="container">
+    <div class="ex-label">
+      <span class="ex-num" style="background:rgba(248,113,113,.15);color:var(--red)">5</span>
+      Ejercicio
+    </div>
+    <h2>El "Peor Escenario" — Stress-Test</h2>
+    <p class="lead mb-4">Laberinto falso con pasillo trampa y pantano de alto costo. Cuando Greedy cae en el callejón sin salida, A* lo balancea mejor. Luego comparamos Dijkstra vs A* con celdas ponderadas.</p>
+
+    <!-- Sub-escenario 5A: Greedy vs A* -->
+    <h5 class="mb-3" style="color:var(--heading);font-weight:600">5A — Pasillo Trampa: Greedy vs A*</h5>
+    <div class="info-box" style="background:rgba(248,113,113,.06);border-color:rgba(248,113,113,.2)">
+      <i class="fa-solid fa-skull" style="color:var(--red)"></i>
+      El pasillo central (filas 5–9) parece el camino directo al destino. Greedy lo sigue ciegamente pero está bloqueado al final. A* detecta antes que el costo acumulado hace que rodear sea más eficiente.
+    </div>
+
+    <div class="mb-3 d-flex flex-wrap gap-2">
+      <button id="btn5a-greedy" class="btn-run" style="background:rgba(251,191,36,.15);color:var(--greedy-c)" onclick="runEx5a('greedy')">
+        <i class="fa-solid fa-play"></i> Greedy (Trampa)
+      </button>
+      <button id="btn5a-astar" class="btn-run" style="background:rgba(74,222,128,.15);color:var(--astar-c)" onclick="runEx5a('astar')">
+        <i class="fa-solid fa-play"></i> A* (Balanceado)
+      </button>
+      <button class="btn-reset" onclick="resetEx5a()"><i class="fa-solid fa-rotate-left me-1"></i>Reset</button>
+      <div class="speed-wrap ms-auto"><input type="range" id="speed5a" min="1" max="10" value="5"></div>
+    </div>
+
+    <div class="compare-grid">
+      <div class="card-dark">
+        <div class="card-header">
+          <span class="algo-dot" style="background:var(--greedy-c)"></span>
+          Greedy — Cae en la trampa
+        </div>
+        <div class="card-body">
+          <div class="canvas-wrap"><canvas id="c5a-greedy" width="420" height="285"></canvas></div>
+          <div class="stat-row">
+            <div class="stat-box"><div class="val" id="s5ag-nodes">—</div><div class="lbl">Visitados</div></div>
+            <div class="stat-box"><div class="val" id="s5ag-path">—</div><div class="lbl">Camino</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-dark">
+        <div class="card-header">
+          <span class="algo-dot" style="background:var(--astar-c)"></span>
+          A* — Exploración balanceada
+        </div>
+        <div class="card-body">
+          <div class="canvas-wrap"><canvas id="c5a-astar" width="420" height="285"></canvas></div>
+          <div class="stat-row">
+            <div class="stat-box"><div class="val" id="s5aa-nodes">—</div><div class="lbl">Visitados</div></div>
+            <div class="stat-box"><div class="val" id="s5aa-path">—</div><div class="lbl">Camino</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sub-escenario 5B: Pantano Dijkstra vs A* -->
+    <h5 class="mt-5 mb-3" style="color:var(--heading);font-weight:600">5B — Pantano de Alto Costo: Dijkstra vs A*</h5>
+
+    <div class="info-box" style="background:rgba(133,77,14,.15);border-color:rgba(180,120,50,.3)">
+      <i class="fa-solid fa-water" style="color:#d97706"></i>
+      El pantano (celdas <span style="color:#fbbf24">amarillas</span>, costo=5) atraviesa el mapa. Existe un camino limpio (costo 1) dando rodeo. ¿Toman la ruta directa costosa o el rodeo económico?
+    </div>
+
+    <div class="mb-3 d-flex flex-wrap gap-2">
+      <button id="btn5b-dijk" class="btn-run" style="background:rgba(192,132,252,.15);color:var(--dijk-c)" onclick="runEx5b('dijk')">
+        <i class="fa-solid fa-play"></i> Dijkstra
+      </button>
+      <button id="btn5b-astar" class="btn-run" style="background:rgba(74,222,128,.15);color:var(--astar-c)" onclick="runEx5b('astar')">
+        <i class="fa-solid fa-play"></i> A*
+      </button>
+      <button class="btn-reset" onclick="resetEx5b()"><i class="fa-solid fa-rotate-left me-1"></i>Reset</button>
+      <div class="speed-wrap ms-auto"><input type="range" id="speed5b" min="1" max="10" value="6"></div>
+    </div>
+
+    <div class="compare-grid">
+      <div class="card-dark">
+        <div class="card-header">
+          <span class="algo-dot" style="background:var(--dijk-c)"></span>
+          Dijkstra — Costo óptimo
+        </div>
+        <div class="card-body">
+          <div class="canvas-wrap"><canvas id="c5b-dijk" width="420" height="285"></canvas></div>
+          <div class="stat-row">
+            <div class="stat-box"><div class="val" id="s5bd-nodes">—</div><div class="lbl">Visitados</div></div>
+            <div class="stat-box"><div class="val" id="s5bd-cost">—</div><div class="lbl">Costo total</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-dark">
+        <div class="card-header">
+          <span class="algo-dot" style="background:var(--astar-c)"></span>
+          A* — Guiado por heurística
+        </div>
+        <div class="card-body">
+          <div class="canvas-wrap"><canvas id="c5b-astar" width="420" height="285"></canvas></div>
+          <div class="stat-row">
+            <div class="stat-box"><div class="val" id="s5ba-nodes">—</div><div class="lbl">Visitados</div></div>
+            <div class="stat-box"><div class="val" id="s5ba-cost">—</div><div class="lbl">Costo total</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend mt-3">
+      <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>Inicio</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div>Fin</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#374151"></div>Pared</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#92400e"></div>Pantano (costo 5)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#fb923c"></div>Camino</div>
+    </div>
+
+    <div class="discussion mt-4">
+      <div class="disc-header"><i class="fa-solid fa-comments" style="color:var(--primary)"></i> Preguntas de Discusión</div>
+
+      <div class="disc-q">
+        <div class="question">¿En qué casos específicos Greedy termina siendo "más rápido" pero con una solución desastrosa?</div>
+        <div class="answer">
+          Greedy termina más rápido <strong>pero con peor solución</strong> en estos casos:
+          <ul style="margin-top:8px;padding-left:20px;color:var(--muted)">
+            <li><strong>Callejones sin salida hacia el destino:</strong> Greedy se adentra profundamente en el callejón (baja h), agota la rama, y tiene que explorar toda la zona antes de salir. A* balancea g+h y puede descubrir antes que el rodeo es mejor.</li>
+            <li><strong>Mapas con muchos obstáculos en línea recta:</strong> Greedy sigue la línea recta al destino, zigzagueando entre obstáculos, acumulando muchos pasos innecesarios mientras que BFS/A* encuentran el camino más corto sistemáticamente.</li>
+            <li><strong>Entornos adversariales:</strong> Cualquier mapa diseñado para que la heurística sea engañosa (como el "escenario trampa" de este ejercicio).</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="disc-q">
+        <div class="question">¿Existe algún escenario donde A* visite más nodos que BFS?</div>
+        <div class="answer">
+          <strong>Sí, en dos casos:</strong>
+          <br><br>
+          <strong>1. Mapa muy abierto sin obstáculos:</strong> Con heurística Manhattan y destino directamente a la derecha, A* tiene ventaja. Pero si el destino está en diagonal y el mapa está completamente despejado, A* puede explorar un área similar o incluso más grande que BFS dependiendo de cómo los empates se resuelvan en la cola de prioridad.
+          <br><br>
+          <strong>2. Heurística "pesimista" (inadmisible):</strong> Si h(n) subestima mucho el costo real (h ≈ 0), A* degenera en Dijkstra y puede explorar más nodos que BFS porque ordena por f=g+h mientras BFS ordena por profundidad (que en grids no ponderados es equivalente a costo). Una heurística cero hace que A* = Dijkstra = BFS en costo de aristas iguales.
+          <div class="highlight">
+            En la práctica: BFS nunca es superado por A* con heurística perfectamente admisible en grafos no ponderados. Pero con obstáculos, A* siempre supera a BFS en nodos explorados.
+          </div>
+        </div>
+      </div>
+
+      <div class="disc-q">
+        <div class="question">¿Cómo afecta el "peso" de las celdas a la función f(n) = g(n) + h(n)?</div>
+        <div class="answer">
+          El peso de una celda afecta directamente el costo acumulado <strong>g(n)</strong>:
+          <br><br>
+          Al atravesar una celda pantano (costo w=5), g(n) aumenta en 5 en lugar de 1. Esto hace que f(n) = g(n) + h(n) sea mayor para ese nodo. En consecuencia, el algoritmo <strong>depriorizará</strong> la exploración de caminos que atraviesen el pantano en favor de caminos alternativos con menor costo acumulado, incluso si esos caminos son más largos en número de pasos.
+          <br><br>
+          La heurística h(n) no cambia (sigue siendo distancia Manhattan al destino), pero el balance entre g y h se inclina: con celdas de alto costo, A* se comporta más como Dijkstra porque g domina sobre h.
+        </div>
+      </div>
+
+      <div class="disc-q">
+        <div class="question">Si aumentamos el peso del pantano al infinito, ¿en qué algoritmo se convierte Dijkstra?</div>
+        <div class="answer">
+          Si el peso de las celdas del pantano tiende a <strong>infinito (∞)</strong>, esas celdas se vuelven <em>efectivamente impasables</em> (su costo es tan alto que ningún camino óptimo las atravesaría). Dijkstra entonces solo considera celdas con costo finito (costo=1), y al expandir nodos en orden de costo uniforme con todos los costos iguales a 1...
+          <div class="highlight">
+            <strong>Dijkstra con pesos {1, ∞} se convierte en BFS.</strong><br>
+            Cuando todas las aristas transitables tienen el mismo costo, la cola de prioridad de Dijkstra se comporta exactamente como la cola FIFO de BFS: todos los nodos a la misma profundidad tienen el mismo g(n), por lo tanto el mismo orden de expansión.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer>
+  <div class="container text-center">
+    <p style="color:var(--heading);font-weight:600;margin-bottom:6px">Inteligencia Artificial 2026 — Lab 05</p>
+    <p>Simulación interactiva de algoritmos de búsqueda: BFS · DFS · UCS · Greedy · A*</p>
+    <p class="mt-2" style="font-size:.75rem">Implementado con Canvas API · Bootstrap 5 · JavaScript ES6+</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ══════════════════════════════════════════════
+//  CONSTANTS & TYPES
+// ══════════════════════════════════════════════
+const EMPTY = 0, WALL = 1, SWAMP = 2;
+const ROWS = 15, COLS = 21;
+
+// Cell colors
+const COLOR = {
+  empty:   '#1a2233',
+  wall:    '#374151',
+  swamp:   '#78350f',
+  start:   '#059669',
+  end:     '#dc2626',
+  bfs:     'rgba(56,189,248,0.55)',
+  dfs:     'rgba(248,113,113,0.55)',
+  greedy:  'rgba(251,191,36,0.55)',
+  astar:   'rgba(74,222,128,0.55)',
+  dijkstra:'rgba(192,132,252,0.55)',
+  path:    '#f97316',
+  grid:    '#0d1117'
+};
+
+// ══════════════════════════════════════════════
+//  DRAWING ENGINE
+// ══════════════════════════════════════════════
+function drawGrid(canvasId, grid, visitedSet, pathSet, start, end, visitColor) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const rows = grid.length, cols = grid[0].length;
+  const cw = canvas.width / cols, ch = canvas.height / rows;
+
+  ctx.fillStyle = COLOR.grid;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const key = r + ',' + c;
+      let color;
+      if (r === start[0] && c === start[1]) color = COLOR.start;
+      else if (r === end[0] && c === end[1]) color = COLOR.end;
+      else if (grid[r][c] === WALL) color = COLOR.wall;
+      else if (grid[r][c] === SWAMP) color = COLOR.swamp;
+      else if (pathSet && pathSet.has(key)) color = COLOR.path;
+      else if (visitedSet && visitedSet.has(key)) color = visitColor;
+      else color = COLOR.empty;
+
+      const pad = 1;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.roundRect(c*cw+pad, r*ch+pad, cw-pad*2, ch-pad*2, 2);
+      ctx.fill();
+    }
+  }
+
+  // Draw S / E labels
+  ctx.font = `bold ${Math.min(cw,ch)*0.55}px Inter`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#fff';
+  ctx.fillText('S', start[1]*cw + cw/2, start[0]*ch + ch/2);
+  ctx.fillText('E', end[1]*cw + cw/2, end[0]*ch + ch/2);
+}
+
+// ══════════════════════════════════════════════
+//  ALGORITHMS
+// ══════════════════════════════════════════════
+function reconstructPath(parents, startKey, endKey) {
+  const path = [];
+  let cur = endKey;
+  const seen = new Set();
+  while (cur && cur !== startKey) {
+    if (seen.has(cur)) break;
+    seen.add(cur);
+    path.unshift(cur);
+    cur = parents.get(cur);
+  }
+  if (cur === startKey) path.unshift(startKey);
+  return path.map(k => k.split(',').map(Number));
+}
+
+function runBFS(grid, start, end) {
+  const [sr,sc]=[...start], [er,ec]=[...end];
+  const sk=sr+','+sc, ek=er+','+ec;
+  const queue=[[sr,sc]], visited=new Set([sk]);
+  const parents=new Map(), order=[];
+  const D=[[-1,0],[1,0],[0,-1],[0,1]];
+  while(queue.length){
+    const [r,c]=queue.shift(), k=r+','+c;
+    order.push([r,c]);
+    if(k===ek) return{order,path:reconstructPath(parents,sk,ek),frontier:queue.length};
+    for(const[dr,dc]of D){
+      const nr=r+dr,nc=c+dc,nk=nr+','+nc;
+      if(nr>=0&&nr<grid.length&&nc>=0&&nc<grid[0].length&&!visited.has(nk)&&grid[nr][nc]!==WALL){
+        visited.add(nk); parents.set(nk,k); queue.push([nr,nc]);
+      }
+    }
+  }
+  return{order,path:[],frontier:0};
+}
+
+function runDFS(grid, start, end) {
+  const [sr,sc]=[...start],[er,ec]=[...end];
+  const sk=sr+','+sc,ek=er+','+ec;
+  const stack=[[sr,sc]],visited=new Set();
+  const parents=new Map(),order=[];
+  const D=[[-1,0],[1,0],[0,-1],[0,1]];
+  while(stack.length){
+    const [r,c]=stack.pop(),k=r+','+c;
+    if(visited.has(k))continue;
+    visited.add(k); order.push([r,c]);
+    if(k===ek)return{order,path:reconstructPath(parents,sk,ek),frontier:stack.length};
+    for(const[dr,dc]of D){
+      const nr=r+dr,nc=c+dc,nk=nr+','+nc;
+      if(nr>=0&&nr<grid.length&&nc>=0&&nc<grid[0].length&&!visited.has(nk)&&grid[nr][nc]!==WALL){
+        if(!parents.has(nk))parents.set(nk,k);
+        stack.push([nr,nc]);
+      }
+    }
+  }
+  return{order,path:[],frontier:0};
+}
+
+function runGreedy(grid, start, end) {
+  const [sr,sc]=[...start],[er,ec]=[...end];
+  const sk=sr+','+sc,ek=er+','+ec;
+  const h=(r,c)=>Math.abs(r-er)+Math.abs(c-ec);
+  const open=[[h(sr,sc),sr,sc]],visited=new Set();
+  const parents=new Map(),order=[];
+  const D=[[-1,0],[1,0],[0,-1],[0,1]];
+  while(open.length){
+    open.sort((a,b)=>a[0]-b[0]);
+    const[,r,c]=open.shift(),k=r+','+c;
+    if(visited.has(k))continue;
+    visited.add(k); order.push([r,c]);
+    if(k===ek)return{order,path:reconstructPath(parents,sk,ek),frontier:open.length};
+    for(const[dr,dc]of D){
+      const nr=r+dr,nc=c+dc,nk=nr+','+nc;
+      if(nr>=0&&nr<grid.length&&nc>=0&&nc<grid[0].length&&!visited.has(nk)&&grid[nr][nc]!==WALL){
+        if(!parents.has(nk))parents.set(nk,k);
+        open.push([h(nr,nc),nr,nc]);
+      }
+    }
+  }
+  return{order,path:[],frontier:0};
+}
+
+function runAstar(grid, start, end, heuristic='manhattan') {
+  const [sr,sc]=[...start],[er,ec]=[...end];
+  const sk=sr+','+sc,ek=er+','+ec;
+  const h=(r,c)=>heuristic==='manhattan'
+    ?Math.abs(r-er)+Math.abs(c-ec)
+    :Math.sqrt((r-er)**2+(c-ec)**2);
+  const open=[[h(sr,sc),0,sr,sc]];
+  const gScore=new Map([[sk,0]]);
+  const visited=new Set(),parents=new Map(),order=[];
+  const D=[[-1,0],[1,0],[0,-1],[0,1]];
+  while(open.length){
+    open.sort((a,b)=>a[0]-b[0]||(a[1]-b[1]));
+    const[,g,r,c]=open.shift(),k=r+','+c;
+    if(visited.has(k))continue;
+    visited.add(k); order.push([r,c]);
+    if(k===ek)return{order,path:reconstructPath(parents,sk,ek),frontier:open.length,cost:g};
+    for(const[dr,dc]of D){
+      const nr=r+dr,nc=c+dc,nk=nr+','+nc;
+      if(nr>=0&&nr<grid.length&&nc>=0&&nc<grid[0].length&&!visited.has(nk)&&grid[nr][nc]!==WALL){
+        const w=grid[nr][nc]===SWAMP?5:1,ng=g+w;
+        if(!gScore.has(nk)||ng<gScore.get(nk)){
+          gScore.set(nk,ng); parents.set(nk,k);
+          open.push([ng+h(nr,nc),ng,nr,nc]);
+        }
+      }
+    }
+  }
+  return{order,path:[],frontier:0,cost:Infinity};
+}
+
+function runDijkstra(grid, start, end) {
+  const [sr,sc]=[...start],[er,ec]=[...end];
+  const sk=sr+','+sc,ek=er+','+ec;
+  const open=[[0,sr,sc]];
+  const dist=new Map([[sk,0]]);
+  const visited=new Set(),parents=new Map(),order=[];
+  const D=[[-1,0],[1,0],[0,-1],[0,1]];
+  while(open.length){
+    open.sort((a,b)=>a[0]-b[0]);
+    const[d,r,c]=open.shift(),k=r+','+c;
+    if(visited.has(k))continue;
+    visited.add(k); order.push([r,c]);
+    if(k===ek)return{order,path:reconstructPath(parents,sk,ek),frontier:open.length,cost:d};
+    for(const[dr,dc]of D){
+      const nr=r+dr,nc=c+dc,nk=nr+','+nc;
+      if(nr>=0&&nr<grid.length&&nc>=0&&nc<grid[0].length&&!visited.has(nk)&&grid[nr][nc]!==WALL){
+        const w=grid[nr][nc]===SWAMP?5:1,nd=d+w;
+        if(!dist.has(nk)||nd<dist.get(nk)){
+          dist.set(nk,nd); parents.set(nk,k); open.push([nd,nr,nc]);
+        }
+      }
+    }
+  }
+  return{order,path:[],frontier:0,cost:Infinity};
+}
+
+// ══════════════════════════════════════════════
+//  ANIMATION ENGINE
+// ══════════════════════════════════════════════
+const animations = {};
+
+function animate(id, canvasId, grid, result, visitColor, statsIds, onDone) {
+  if (animations[id]) cancelAnimationFrame(animations[id]);
+  const visitedSet = new Set(), pathSet = new Set();
+  const { order, path, frontier, cost } = result;
+  let step = 0;
+
+  function frame() {
+    const exKey = id.match(/^(\d+[ab]?)/)?.[1] || '1';
+    const speedEl = document.getElementById('speed'+exKey);
+    const speed = parseInt(speedEl?.value || 5);
+    const batch = Math.max(1, Math.floor(speed * 1.5));
+
+    if (step < order.length) {
+      for (let i = 0; i < batch && step < order.length; i++, step++) {
+        visitedSet.add(order[step][0]+','+order[step][1]);
+      }
+      drawGrid(canvasId, grid, visitedSet, pathSet, grid._start, grid._end, visitColor);
+      animations[id] = requestAnimationFrame(frame);
+    } else {
+      for (const [r,c] of path) pathSet.add(r+','+c);
+      drawGrid(canvasId, grid, visitedSet, pathSet, grid._start, grid._end, visitColor);
+      if (statsIds) updateStats(statsIds, order.length, path.length, frontier, cost);
+      if (onDone) onDone();
+    }
+  }
+  frame();
+}
+
+function getSpeedValue(exNum) {
+  const el = document.getElementById('speed'+exNum);
+  return el ? parseInt(el.value) : 5;
+}
+
+function updateStats(ids, nodes, pathLen, frontier, cost) {
+  const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val !== undefined && val !== null ? val : '—'; };
+  if (!ids) return;
+  const [a,b,c,d] = ids;
+  if(a) set(a, nodes);
+  if(b) set(b, pathLen);
+  if(c) set(c, frontier);
+  if(d) set(d, cost !== undefined && cost !== Infinity ? cost : '—');
+}
+
+// ══════════════════════════════════════════════
+//  MAZE GENERATOR (DFS-based)
+// ══════════════════════════════════════════════
+function generateDFSMaze(rows, cols) {
+  const g = Array.from({length:rows},()=>Array(cols).fill(WALL));
+  function carve(r,c){
+    g[r][c]=EMPTY;
+    const dirs=[[0,2],[2,0],[0,-2],[-2,0]].sort(()=>Math.random()-.5);
+    for(const[dr,dc]of dirs){
+      const nr=r+dr,nc=c+dc;
+      if(nr>0&&nr<rows-1&&nc>0&&nc<cols-1&&g[nr][nc]===WALL){
+        g[r+dr/2][c+dc/2]=EMPTY;
+        carve(nr,nc);
+      }
+    }
+  }
+  carve(1,1);
+  // ensure start/end clear
+  g[1][1]=EMPTY; g[rows-2][cols-2]=EMPTY;
+  return g;
+}
+
+function generateScatteredObstacles(rows, cols, density=0.2) {
+  const g = Array.from({length:rows},()=>Array(cols).fill(EMPTY));
+  // Border walls
+  for(let r=0;r<rows;r++){g[r][0]=WALL;g[r][cols-1]=WALL;}
+  for(let c=0;c<cols;c++){g[0][c]=WALL;g[rows-1][c]=WALL;}
+  for(let r=1;r<rows-1;r++)
+    for(let c=1;c<cols-1;c++)
+      if(Math.random()<density&&!(r===1&&c===1)&&!(r===rows-2&&c===cols-2))
+        g[r][c]=WALL;
+  return g;
+}
+
+// ══════════════════════════════════════════════
+//  EXERCISE 1 — BFS vs DFS
+// ══════════════════════════════════════════════
+let maze1 = null;
+
+function generateMaze1() {
+  maze1 = generateDFSMaze(ROWS, COLS);
+  maze1._start = [1,1];
+  maze1._end = [ROWS-2, COLS-2];
+  drawGrid('c1-bfs', maze1, null, null, maze1._start, maze1._end, COLOR.bfs);
+  drawGrid('c1-dfs', maze1, null, null, maze1._start, maze1._end, COLOR.dfs);
+  ['s1b-nodes','s1b-path','s1b-front','s1d-nodes','s1d-path','s1d-front'].forEach(id=>{
+    const el=document.getElementById(id); if(el)el.textContent='—';
+  });
+}
+
+function runEx1(algo) {
+  if (!maze1) generateMaze1();
+  const canvasId = algo==='bfs'?'c1-bfs':'c1-dfs';
+  const color = algo==='bfs'?COLOR.bfs:COLOR.dfs;
+  const statsN = algo==='bfs'?'s1b-nodes':'s1d-nodes';
+  const statsP = algo==='bfs'?'s1b-path':'s1d-path';
+  const statsF = algo==='bfs'?'s1b-front':'s1d-front';
+
+  document.getElementById('btn1-bfs').disabled=true;
+  document.getElementById('btn1-dfs').disabled=true;
+
+  const result = algo==='bfs'
+    ? runBFS(maze1, maze1._start, maze1._end)
+    : runDFS(maze1, maze1._start, maze1._end);
+
+  animate('1'+algo, canvasId, maze1, result, color,
+    [statsN, statsP, statsF], ()=>{
+      document.getElementById('btn1-bfs').disabled=false;
+      document.getElementById('btn1-dfs').disabled=false;
+    });
+}
+
+// ══════════════════════════════════════════════
+//  EXERCISE 2 — Greedy Trap
+// ══════════════════════════════════════════════
+let maze2 = null;
+
+function buildGreedyTrap() {
+  const rows=15, cols=21;
+  const g = Array.from({length:rows},()=>Array(cols).fill(EMPTY));
+  // Border
+  for(let r=0;r<rows;r++){g[r][0]=WALL;g[r][cols-1]=WALL;}
+  for(let c=0;c<cols;c++){g[0][c]=WALL;g[rows-1][c]=WALL;}
+
+  // Vertical wall col=13, rows 2..12
+  for(let r=2;r<=12;r++) g[r][13]=WALL;
+  // Top horizontal arm: row=2, cols 13..18
+  for(let c=13;c<=18;c++) g[2][c]=WALL;
+  // Bottom sealed: no gap at bottom arm → force going around top via row 0-1
+  // Actually add horizontal wall row=12, cols 13..18
+  for(let c=13;c<=18;c++) g[12][c]=WALL;
+
+  // Small opening at top only: row=1,col=13 is EMPTY (already not set)
+  // So path goes: left → up to row1 → right past col13 → down to end
+
+  g._start=[7,1]; g._end=[7,19];
+  return g;
+}
+
+function resetEx2() {
+  maze2 = buildGreedyTrap();
+  drawGrid('c2-greedy', maze2, null, null, maze2._start, maze2._end, COLOR.greedy);
+  drawGrid('c2-bfs', maze2, null, null, maze2._start, maze2._end, COLOR.bfs);
+  ['s2g-nodes','s2g-path','s2b-nodes','s2b-path'].forEach(id=>{
+    const el=document.getElementById(id); if(el)el.textContent='—';
+  });
+}
+
+function runEx2(algo) {
+  if (!maze2) resetEx2();
+  const isGreedy = algo==='greedy';
+  const canvasId = isGreedy?'c2-greedy':'c2-bfs';
+  const color = isGreedy?COLOR.greedy:COLOR.bfs;
+  const statsN = isGreedy?'s2g-nodes':'s2b-nodes';
+  const statsP = isGreedy?'s2g-path':'s2b-path';
+
+  document.getElementById('btn2-greedy').disabled=true;
+  document.getElementById('btn2-bfs').disabled=true;
+
+  const result = isGreedy
+    ? runGreedy(maze2, maze2._start, maze2._end)
+    : runBFS(maze2, maze2._start, maze2._end);
+
+  animate('2'+algo, canvasId, maze2, result, color,
+    [statsN, statsP, null], ()=>{
+      document.getElementById('btn2-greedy').disabled=false;
+      document.getElementById('btn2-bfs').disabled=false;
+    });
+}
+
+// ══════════════════════════════════════════════
+//  EXERCISE 3 — A* vs Dijkstra
+// ══════════════════════════════════════════════
+let maze3 = null;
+
+function generateMaze3() {
+  const rows=15, cols=21;
+  maze3 = generateScatteredObstacles(rows, cols, 0.22);
+  maze3._start=[1,1]; maze3._end=[rows-2, cols-2];
+  maze3[1][1]=EMPTY; maze3[rows-2][cols-2]=EMPTY;
+  drawGrid('c3-astar', maze3, null, null, maze3._start, maze3._end, COLOR.astar);
+  drawGrid('c3-dijk', maze3, null, null, maze3._start, maze3._end, COLOR.dijkstra);
+  ['s3a-nodes','s3a-path','s3a-front','s3d-nodes','s3d-path','s3d-front',
+   't3a-nodes','t3a-front','t3a-steps','t3a-cost','t3d-nodes','t3d-front','t3d-steps','t3d-cost'].forEach(id=>{
+    const el=document.getElementById(id); if(el)el.textContent='—';
+  });
+}
+
+function runEx3(algo) {
+  if (!maze3) generateMaze3();
+  const isAstar = algo==='astar';
+  const canvasId = isAstar?'c3-astar':'c3-dijk';
+  const color = isAstar?COLOR.astar:COLOR.dijkstra;
+
+  document.getElementById('btn3-astar').disabled=true;
+  document.getElementById('btn3-dijk').disabled=true;
+
+  const result = isAstar
+    ? runAstar(maze3, maze3._start, maze3._end, 'manhattan')
+    : runDijkstra(maze3, maze3._start, maze3._end);
+
+  const statsN = isAstar?'s3a-nodes':'s3d-nodes';
+  const statsP = isAstar?'s3a-path':'s3d-path';
+  const statsF = isAstar?'s3a-front':'s3d-front';
+  const tN = isAstar?'t3a-nodes':'t3d-nodes';
+  const tF = isAstar?'t3a-front':'t3d-front';
+  const tS = isAstar?'t3a-steps':'t3d-steps';
+  const tC = isAstar?'t3a-cost':'t3d-cost';
+
+  animate('3'+algo, canvasId, maze3, result, color,
+    [statsN, statsP, statsF], ()=>{
+      updateStats([tN,tS,tF,tC], result.order.length, result.path.length, result.frontier, result.cost||result.path.length);
+      document.getElementById('btn3-astar').disabled=false;
+      document.getElementById('btn3-dijk').disabled=false;
+    });
+}
+
+// ══════════════════════════════════════════════
+//  EXERCISE 4 — Manhattan vs Euclidean
+// ══════════════════════════════════════════════
+let maze4 = null;
+
+function generateMaze4() {
+  const rows=15, cols=21;
+  maze4 = generateScatteredObstacles(rows, cols, 0.2);
+  maze4._start=[1,1]; maze4._end=[rows-2, cols-2];
+  maze4[1][1]=EMPTY; maze4[rows-2][cols-2]=EMPTY;
+  drawGrid('c4-man', maze4, null, null, maze4._start, maze4._end, COLOR.astar);
+  drawGrid('c4-euc', maze4, null, null, maze4._start, maze4._end, COLOR.dijkstra);
+  ['s4m-nodes','s4m-path','s4m-front','s4e-nodes','s4e-path','s4e-front',
+   't4m-nodes','t4m-front','t4m-steps','t4m-cost','t4e-nodes','t4e-front','t4e-steps','t4e-cost'].forEach(id=>{
+    const el=document.getElementById(id); if(el)el.textContent='—';
+  });
+}
+
+function runEx4(metric) {
+  if (!maze4) generateMaze4();
+  const isMan = metric==='manhattan';
+  const canvasId = isMan?'c4-man':'c4-euc';
+  const color = isMan?COLOR.astar:COLOR.dijkstra;
+
+  document.getElementById('btn4-man').disabled=true;
+  document.getElementById('btn4-euc').disabled=true;
+
+  const result = runAstar(maze4, maze4._start, maze4._end, metric);
+
+  const statsN = isMan?'s4m-nodes':'s4e-nodes';
+  const statsP = isMan?'s4m-path':'s4e-path';
+  const statsF = isMan?'s4m-front':'s4e-front';
+  const tN = isMan?'t4m-nodes':'t4e-nodes';
+  const tF = isMan?'t4m-front':'t4e-front';
+  const tS = isMan?'t4m-steps':'t4e-steps';
+  const tC = isMan?'t4m-cost':'t4e-cost';
+
+  animate('4'+metric, canvasId, maze4, result, color,
+    [statsN, statsP, statsF], ()=>{
+      updateStats([tN,tS,tF,tC], result.order.length, result.path.length, result.frontier, result.cost||result.path.length);
+      document.getElementById('btn4-man').disabled=false;
+      document.getElementById('btn4-euc').disabled=false;
+    });
+}
+
+// ══════════════════════════════════════════════
+//  EXERCISE 5A — Stress Test (Greedy vs A*)
+// ══════════════════════════════════════════════
+let maze5a = null;
+
+function buildStressMaze() {
+  const rows=15, cols=25;
+  const g = Array.from({length:rows},()=>Array(cols).fill(EMPTY));
+  for(let r=0;r<rows;r++){g[r][0]=WALL;g[r][cols-1]=WALL;}
+  for(let c=0;c<cols;c++){g[0][c]=WALL;g[rows-1][c]=WALL;}
+
+  // Corridor trap: walls on rows 5 and 9, cols 3..21
+  for(let c=3;c<=21;c++){g[5][c]=WALL; g[9][c]=WALL;}
+  // Dead-end wall at col 21, rows 5..9
+  for(let r=5;r<=9;r++) g[r][21]=WALL;
+  // Keep col 2 clear (entrance to corridor)
+  // Corridor interior is rows 6,7,8 cols 3..20 (EMPTY)
+
+  g._start=[7,2]; g._end=[7,23];
+  return g;
+}
+
+function resetEx5a() {
+  maze5a = buildStressMaze();
+  drawGrid('c5a-greedy', maze5a, null, null, maze5a._start, maze5a._end, COLOR.greedy);
+  drawGrid('c5a-astar', maze5a, null, null, maze5a._start, maze5a._end, COLOR.astar);
+  ['s5ag-nodes','s5ag-path','s5aa-nodes','s5aa-path'].forEach(id=>{
+    const el=document.getElementById(id); if(el)el.textContent='—';
+  });
+}
+
+function runEx5a(algo) {
+  if (!maze5a) resetEx5a();
+  const isGreedy = algo==='greedy';
+  const canvasId = isGreedy?'c5a-greedy':'c5a-astar';
+  const color = isGreedy?COLOR.greedy:COLOR.astar;
+  const statsN = isGreedy?'s5ag-nodes':'s5aa-nodes';
+  const statsP = isGreedy?'s5ag-path':'s5aa-path';
+
+  document.getElementById('btn5a-greedy').disabled=true;
+  document.getElementById('btn5a-astar').disabled=true;
+
+  const result = isGreedy
+    ? runGreedy(maze5a, maze5a._start, maze5a._end)
+    : runAstar(maze5a, maze5a._start, maze5a._end);
+
+  animate('5a'+algo, canvasId, maze5a, result, color,
+    [statsN, statsP, null], ()=>{
+      document.getElementById('btn5a-greedy').disabled=false;
+      document.getElementById('btn5a-astar').disabled=false;
+    });
+}
+
+// ══════════════════════════════════════════════
+//  EXERCISE 5B — Swamp Test (Dijkstra vs A*)
+// ══════════════════════════════════════════════
+let maze5b = null;
+
+function buildSwampMaze() {
+  const rows=15, cols=25;
+  const g = Array.from({length:rows},()=>Array(cols).fill(EMPTY));
+  for(let r=0;r<rows;r++){g[r][0]=WALL;g[r][cols-1]=WALL;}
+  for(let c=0;c<cols;c++){g[0][c]=WALL;g[rows-1][c]=WALL;}
+
+  // Swamp cols 8..13, rows 1..13
+  for(let r=1;r<=13;r++)
+    for(let c=8;c<=13;c++)
+      g[r][c]=SWAMP;
+
+  // Wall barrier at col 17, rows 3..11 (partial)
+  for(let r=3;r<=11;r++) g[r][18]=WALL;
+
+  g._start=[7,2]; g._end=[7,23];
+  return g;
+}
+
+function resetEx5b() {
+  maze5b = buildSwampMaze();
+  drawGrid('c5b-dijk', maze5b, null, null, maze5b._start, maze5b._end, COLOR.dijkstra);
+  drawGrid('c5b-astar', maze5b, null, null, maze5b._start, maze5b._end, COLOR.astar);
+  ['s5bd-nodes','s5bd-cost','s5ba-nodes','s5ba-cost'].forEach(id=>{
+    const el=document.getElementById(id); if(el)el.textContent='—';
+  });
+}
+
+function runEx5b(algo) {
+  if (!maze5b) resetEx5b();
+  const isDijk = algo==='dijk';
+  const canvasId = isDijk?'c5b-dijk':'c5b-astar';
+  const color = isDijk?COLOR.dijkstra:COLOR.astar;
+  const statsN = isDijk?'s5bd-nodes':'s5ba-nodes';
+  const statsC = isDijk?'s5bd-cost':'s5ba-cost';
+
+  document.getElementById('btn5b-dijk').disabled=true;
+  document.getElementById('btn5b-astar').disabled=true;
+
+  const result = isDijk
+    ? runDijkstra(maze5b, maze5b._start, maze5b._end)
+    : runAstar(maze5b, maze5b._start, maze5b._end);
+
+  animate('5b'+algo, canvasId, maze5b, result, color,
+    [statsN, null, null, statsC], ()=>{
+      const el = document.getElementById(statsC);
+      if(el) el.textContent = result.cost !== undefined && result.cost !== Infinity ? result.cost : '—';
+      const en = document.getElementById(statsN);
+      if(en) en.textContent = result.order.length;
+      document.getElementById('btn5b-dijk').disabled=false;
+      document.getElementById('btn5b-astar').disabled=false;
+    });
+}
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  generateMaze1();
+  resetEx2();
+  generateMaze3();
+  generateMaze4();
+  resetEx5a();
+  resetEx5b();
+});
+
+</script>
+</body>
+</html>
